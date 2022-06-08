@@ -35,9 +35,8 @@ def format_artesian_auction_data(df_artesian):
     return df
 
 
-
 ###################################################
-##################   Formatter  ###################
+#'''''''''''''''''   Formatter  ''''''''''''''''''#
 ###################################################
 
 
@@ -50,6 +49,17 @@ def format_artesian_auction_data(df_artesian):
 # ''''''''''''''''''   GET  '''''''''''''''''''''''
 ###################################################
 
+def get_artesian_data_auction(arr_id_curva,
+                              str_data_inizio_estrazione,
+                              str_data_fine_estrazione):
+    cfg = get_configuration()
+    qs = QueryService(cfg)
+    data = qs.createAuction() \
+        .forMarketData(arr_id_curva) \
+        .inAbsoluteDateRange(str_data_inizio_estrazione, str_data_fine_estrazione) \
+        .inTimeZone("UTC") \
+        .execute()
+    return pd.DataFrame(data)
 
 ###################################################
 # ''''''''''''''''''   UPDATE  ''''''''''''''''''''

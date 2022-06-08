@@ -1,9 +1,9 @@
 from KTE_artesian_general import *
 
-###################################################
-##################   Formatter  ###################
-###################################################
 
+###################################################
+#'''''''''''''''''   Formatter  ''''''''''''''''''#
+###################################################
 
 # La funzione rende il dizionario utile al caricamento dei dati su Artesian.
 # Il parametro column_name contiene il nome della colonna che si desidera caricare come valore della time series.
