@@ -4,10 +4,14 @@ from KTE_artesian_general import *
 # '''''''''''''''''  Formatter  ''''''''''''''''
 ###################################################
 
-
-# Il dataframe passato come input deve avere l'index ti tipo Pandas Timestamp, il parametro colonna è il nome della
-# colonna che si vuole usare come valore della time series
 def make_artesian_dict_actual(df, colonna):
+    '''
+        Il dataframe passato come input deve avere l'index ti tipo Pandas Timestamp, il parametro colonna è il nome della
+        colonna che si vuole usare come valore della time series
+            :param df: Pandas DataFrame
+            :param colonna: Stringa nome della colonna da trasformare in dizionario
+            :return: Dizionario formattato per Artesian
+    '''
     dict_artesian = dict()
     for index, row in df.iterrows():
         dict_artesian[datetime(index.year, index.month, index.day, index.hour)] = row[colonna]
@@ -20,6 +24,15 @@ def make_artesian_dict_actual(df, colonna):
 
 
 def post_artesian_actual_time_series_daily(data, dict_of_tags, provider, curve_name):
+    '''
+        Carica su Artesian una Actual Time Series con granularità giornaliera
+            :param data: Dizionario formattato secondo specifiche Artesian. Chiave(Datetime)->Valore(Float)
+            :param dict_of_tags: Dizionario contenente nome e categoria dei tag.
+                                    Chiave(Stringa-Categoria)->Valore(ArrayString-> Tags)
+            :param provider: Stringa contenente il nome del provider del dato
+            :param curve_name: Stringa contenente il nome univoco della curva
+            :return: None
+    '''
     cfg = get_configuration()
 
     mkservice = MarketData.MarketDataService(cfg)
@@ -47,6 +60,15 @@ def post_artesian_actual_time_series_daily(data, dict_of_tags, provider, curve_n
 
 
 def post_artesian_actual_time_series_monthly(data, dict_of_tags, provider, curve_name):
+    '''
+        Carica su Artesian una Actual Time Series con granularità mensile
+            :param data: Dizionario formattato secondo specifiche Artesian. Chiave(Datetime)->Valore(Float)
+            :param dict_of_tags: Dizionario contenente nome e categoria dei tag.
+                                    Chiave(Stringa-Categoria)->Valore(ArrayString-> Tags)
+            :param provider: Stringa contenente il nome del provider del dato
+            :param curve_name: Stringa contenente il nome univoco della curva
+            :return: None
+    '''
     cfg = get_configuration()
 
     mkservice = MarketData.MarketDataService(cfg)
@@ -73,7 +95,39 @@ def post_artesian_actual_time_series_monthly(data, dict_of_tags, provider, curve
     mkservice.upsertData(data)
 
 
-def post_artesian_actual_time_series(data, dict_of_tags, provider, curve_name, string_granularity):
+def post_artesian_actual_time_series(data, dict_of_tags, provider, curve_name,
+                                     string_granularity, original_timezone='CET'):
+    '''
+        Carica su Artesian una Actual Time Series
+            :param data: Dizionario formattato secondo specifiche Artesian. Chiave(Datetime)->Valore(Float)
+            :param dict_of_tags: Dizionario contenente nome e categoria dei tag.
+                                    Chiave(Stringa-Categoria)->Valore(ArrayString-> Tags)
+            :param provider: Stringa contenente il nome del provider del dato
+            :param curve_name: Stringa contenente il nome univoco della curva
+            :param string_granularity: Char che indica la granularità secondo lo schema
+                            if string_granularity == 'd':
+                                return Granularity.Day
+                            if string_granularity == 'm':
+                                return Granularity.Minute
+                            if string_granularity == 'M':
+                                return Granularity.Month
+                            if string_granularity == 'f':
+                                return Granularity.FifteenMinute
+                            if string_granularity == 'h':
+                                return Granularity.Hour
+                            if string_granularity == 'q':
+                                return Granularity.Quarter
+                            if string_granularity == 't':
+                                return Granularity.TenMinute
+                            if string_granularity == 'T':
+                                return Granularity.ThirtyMinute
+                            if string_granularity == 'w':
+                                return Granularity.Week
+                            if string_granularity == 'y':
+                                return Granularity.Year
+            :param original_timezone: Stringa contenente il nome della timezone originale della curve, es 'CET'
+            :return: None
+    '''
     cfg = get_configuration()
 
     mkservice = MarketData.MarketDataService(cfg)
@@ -84,7 +138,7 @@ def post_artesian_actual_time_series(data, dict_of_tags, provider, curve_name, s
         marketDataName=mkdid.name,
         originalGranularity=get_granularity(string_granularity),
         type=MarketData.MarketDataType.ActualTimeSerie,
-        originalTimezone="CET",
+        originalTimezone=original_timezone,
         tags=dict_of_tags
     )
 
@@ -108,6 +162,35 @@ def get_artesian_data_actual(arr_id_curva,
                       str_data_inizio_estrazione,
                       str_data_fine_estrazione,
                       ganularity='h', time_zone='CET'):
+    '''
+        Rende un dataframe in formato Artesian rappresentatne le Actual Time Series richieste
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param string_granularity: Char che indica la granularità secondo lo schema
+                            if string_granularity == 'd':
+                                return Granularity.Day
+                            if string_granularity == 'm':
+                                return Granularity.Minute
+                            if string_granularity == 'M':
+                                return Granularity.Month
+                            if string_granularity == 'f':
+                                return Granularity.FifteenMinute
+                            if string_granularity == 'h':
+                                return Granularity.Hour
+                            if string_granularity == 'q':
+                                return Granularity.Quarter
+                            if string_granularity == 't':
+                                return Granularity.TenMinute
+                            if string_granularity == 'T':
+                                return Granularity.ThirtyMinute
+                            if string_granularity == 'w':
+                                return Granularity.Week
+                            if string_granularity == 'y':
+                                return Granularity.Year
+            :param time_zone: Stringa contenente il nome della timezone originale della curve, es 'CET'
+            :return: Pandas DataFrame
+    '''
     cfg = get_configuration()
     gran = get_granularity(ganularity)
 
@@ -124,6 +207,13 @@ def get_artesian_data_actual(arr_id_curva,
 
 
 def get_artesian_data_actual_daily(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione):
+    '''
+        Rende un dataframe con granularità giornaliera, in formato Artesian, rappresentatne le Actual Time Series richieste
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :return: Pandas DataFrame
+    '''
     cfg = get_configuration()
 
     qs = QueryService(cfg)

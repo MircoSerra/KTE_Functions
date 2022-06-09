@@ -47,7 +47,7 @@ def format_artesian_data(df_artesian):
 def get_configuration():
     '''
         Autentica l'utente alla connessione con Artesian
-    :return:
+    :return: None
     '''
     return ArtesianConfig(setting.Settings.URL_SERVER, setting.Settings.API_KEY)
 

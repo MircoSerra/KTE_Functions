@@ -26,10 +26,10 @@ class FillerValueBidAsk:
 
 # Classe atta a contenere i valori per il filling delle curve market assessment
 class FillerValueMarketAssessment:
-    def __init__(self, settlement=0, apertura=0, close=0, high=0, low=0, volume_paid=0, volume_given=0, volume=0):
+    def __init__(self, settlement=0, apertura=0, chiusura=0, high=0, low=0, volume_paid=0, volume_given=0, volume=0):
         self.settlement = settlement
         self.apertura = apertura
-        self.close = close
+        self.close = chiusura
         self.high = high
         self.low = low
         self.volume_paid = volume_paid

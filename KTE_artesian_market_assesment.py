@@ -1,15 +1,37 @@
 from KTE_artesian_general import *
 
+
+# Classe atta a contenere i valori per il filling delle curve market assessment
+class FillerValueMarketAssessment:
+    '''
+        Classe costruita con lo scopo di uniformare i valori passati alle funzioni per il recupero delle curve.
+        Serve per modellare un dato da passare come valore di riempimento dei dati mancanti.
+    '''
+    def __init__(self, settlement=0, apertura=0, chiusura=0, high=0, low=0, volume_paid=0, volume_given=0, volume=0):
+        self.settlement = settlement
+        self.apertura = apertura
+        self.close = chiusura
+        self.high = high
+        self.low = low
+        self.volume_paid = volume_paid
+        self.volume_given = volume_given
+        self.volume = volume
+
 ###################################################
 #'''''''''''''''''   Formatter  ''''''''''''''''''#
 ###################################################
 
 
-# Funzione per la creazione del dizionario per il caricamento di curve di tipo Market Assessment
-# Questa funzione permette di caricare un solo valore nel campo settlement.
-# Il parametro codifica_colonna è la funzione per la codifica dei nomi dei prodotti dal
-# formato contenuto nel dataframe al formato funzionale al caricamento delle curve su Artesian
 def make_artesian_dict_market_assesment_settlement(df, codifica_colonna):
+    '''
+       Funzione per la creazione del dizionario per il caricamento di curve di tipo Market Assessment
+        Questa funzione permette di caricare un solo valore nel campo settlement.
+        Il parametro codifica_colonna è la funzione per la codifica dei nomi dei prodotti dal
+        formato contenuto nel dataframe al formato funzionale al caricamento delle curve su Artesian
+            :param df: Pandas DataFrame
+            :param codifica_colonna: Funzione che codifica la colonna nel modo desiderato
+            :return: Dizionario per caricare Market Assessment Time Series su Artesian
+    '''
     dict_of_market_assestments = dict()
     for index, row in df.iterrows():
         list_of_column_names = row.index.to_list()
@@ -24,17 +46,27 @@ def make_artesian_dict_market_assesment_settlement(df, codifica_colonna):
     return dict_of_market_assestments
 
 
-# Passare la data come Pandas Timestamp e l'offset come intero
-# ES. codifica_month(Pandas_Timestamp(maggio 2021), 1) --> Jun-21
 def codifica_month(data, offset):
+    '''
+        Passare la data come Pandas Timestamp e l'offset come intero
+        ES. codifica_month(Pandas_Timestamp(maggio 2021), 1) --> Jun-21
+            :param data: Pandas Timestamp, timestamp relativo alla pubblicazione del dato
+            :param offset: Intero, rappresenta il salto di mesi che si vuole fare
+            :return: Stringa contenente la codifica assoluta del periodo alla quale si riferisce il dato
+    '''
     data = data + pd.DateOffset(months=offset)
     mese = datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%b')
     return mese + '-' + datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%y')
 
 
-# Passare la data come Pandas Timestamp e l'offset come intero
-# ES. codifica_season(Pandas_Timestamp(maggio 2021), 1) --> Sum-21
 def codifica_season(data, offset):
+    '''
+        Passare la data come Pandas Timestamp e l'offset come intero
+        ES. codifica_season(Pandas_Timestamp(maggio 2021), 1) --> Sum-21
+            :param data: Pandas Timestamp, timestamp relativo alla pubblicazione del dato
+            :param offset: Intero, rappresenta il salto di mesi che si vuole fare
+            :return: Stringa contenente la codifica assoluta del periodo alla quale si riferisce il dato
+    '''
     data = data + pd.DateOffset(months=offset * 6)
     if data.month < 4 or data.month > 9:
         return 'Win-' + datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%y')
@@ -42,16 +74,26 @@ def codifica_season(data, offset):
         return 'Sum-' + datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%y')
 
 
-# Passare la data come Pandas Timestamp e l'offset come intero
-# ES. codifica_quarter(Pandas_Timestamp(maggio 2021), 1) --> Q321
 def codifica_quarter(data, offset):
+    '''
+        Passare la data come Pandas Timestamp e l'offset come intero
+        ES. codifica_quarter(Pandas_Timestamp(maggio 2021), 1) --> Q321
+            :param data: Pandas Timestamp, timestamp relativo alla pubblicazione del dato
+            :param offset: Intero, rappresenta il salto di mesi che si vuole fare
+            :return: Stringa contenente la codifica assoluta del periodo alla quale si riferisce il dato
+    '''
     data = data + pd.DateOffset(months=offset * 3)
     return 'Q' + str(data.quarter) + datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%y')
 
 
-# Passare la data come Pandas Timestamp e l'offset come intero
-# ES. codifica_year(Pandas_Timestamp(maggio 2021), 1) --> 2022
 def codifica_year(data, offset):
+    '''
+        Passare la data come Pandas Timestamp e l'offset come intero
+        ES. codifica_year(Pandas_Timestamp(maggio 2021), 1) --> 2022
+            :param data: Pandas Timestamp, timestamp relativo alla pubblicazione del dato
+            :param offset: Intero, rappresenta il salto di mesi che si vuole fare
+            :return: Stringa contenente la codifica assoluta del periodo alla quale si riferisce il dato
+    '''
     data = data + pd.DateOffset(years=offset)
     return datetime.datetime(year=data.year, month=data.month, day=data.day).strftime('%Y')
 
@@ -60,7 +102,18 @@ def codifica_year(data, offset):
 # '''''''''''''''''''  POST  ''''''''''''''''''''''
 ###################################################
 
+
+
 def post_artesian_market_assestments_daily(data, dict_of_tags, provider, curve_name):
+    '''
+        Carica su Artesian una Market Assessment Time Series con granularità giornaliera
+            :param data: Dizionario formattato secondo specifiche Artesian. Chiave(Datetime)->Valore(Float)
+            :param dict_of_tags: Dizionario contenente nome e categoria dei tag.
+                                    Chiave(Stringa-Categoria)->Valore(ArrayString-> Tags)
+            :param provider: Stringa contenente il nome del provider del dato
+            :param curve_name: Stringa contenente il nome univoco della curva
+            :return: None
+    '''
     cfg = get_configuration()
     mkservice = MarketData.MarketDataService(cfg)
 
@@ -71,6 +124,63 @@ def post_artesian_market_assestments_daily(data, dict_of_tags, provider, curve_n
         originalGranularity=Granularity.Day,
         type=MarketData.MarketDataType.MarketAssessment,
         originalTimezone="CET",
+        tags=dict_of_tags
+    )
+
+    registered = mkservice.readMarketDataRegistryByName(mkdid.provider, mkdid.name)
+    if (registered is None):
+        registered = mkservice.registerMarketData(mkd)
+
+    marketAssessment = MarketData.UpsertData(MarketData.MarketDataIdentifier(provider, curve_name), 'CET',
+                                             marketAssessment=data,
+                                             downloadedAt=datetime.now().replace(tzinfo=tz.UTC)
+                                             )
+
+    mkservice.upsertData(marketAssessment)
+
+def post_artesian_actual_time_series(data, dict_of_tags, provider, curve_name,
+                                     string_granularity, original_timezone='CET'):
+    '''
+        Carica su Artesian una Market Assessment Time Series
+            :param data: Dizionario formattato secondo specifiche Artesian. Chiave(Datetime)->Valore(Float)
+            :param dict_of_tags: Dizionario contenente nome e categoria dei tag.
+                                    Chiave(Stringa-Categoria)->Valore(ArrayString-> Tags)
+            :param provider: Stringa contenente il nome del provider del dato
+            :param curve_name: Stringa contenente il nome univoco della curva
+            :param string_granularity: Char che indica la granularità secondo lo schema
+                            if string_granularity == 'd':
+                                return Granularity.Day
+                            if string_granularity == 'm':
+                                return Granularity.Minute
+                            if string_granularity == 'M':
+                                return Granularity.Month
+                            if string_granularity == 'f':
+                                return Granularity.FifteenMinute
+                            if string_granularity == 'h':
+                                return Granularity.Hour
+                            if string_granularity == 'q':
+                                return Granularity.Quarter
+                            if string_granularity == 't':
+                                return Granularity.TenMinute
+                            if string_granularity == 'T':
+                                return Granularity.ThirtyMinute
+                            if string_granularity == 'w':
+                                return Granularity.Week
+                            if string_granularity == 'y':
+                                return Granularity.Year
+            :param original_timezone: Stringa contenente il nome della timezone originale della curve, es 'CET'
+            :return: None
+    '''
+    cfg = get_configuration()
+    mkservice = MarketData.MarketDataService(cfg)
+
+    mkdid = MarketData.MarketDataIdentifier(provider, curve_name)
+    mkd = MarketData.MarketDataEntityInput(
+        providerName=mkdid.provider,
+        marketDataName=mkdid.name,
+        originalGranularity=get_granularity(string_granularity),
+        type=MarketData.MarketDataType.MarketAssessment,
+        originalTimezone=original_timezone,
         tags=dict_of_tags
     )
 
@@ -96,9 +206,27 @@ def get_artesian_data_market_assesment(arr_id_curva,
                                        arr_products,
                                        filler_str='no',
                                        filler_value=0):
+    '''
+
+        Rende un dataframe rappresentatne le Market Assessment Time Series richieste
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param arr_products: Array di stringhe rappresentanti i nomi dei prodotti richiesti. Es: ['Q122']
+            :param filler_str: Stringa indicante la strategia di filling da adottare durante l'estrazione.
+                                Le varie strategie si indicano secondo lo schema:
+                                    - 'no'     : Nessun filling
+                                    - 'last'   : Riempimento con l'ultimo valore disponible
+                                    - 'custom' : Riempimento dei buchi con il valore passato come parametro
+                                    - 'none'   : Riempimento dei buchi con il valore None
+            :param filler_value: Custom Class FillerValueMarketAssessment.
+                                 Parametro che rappresenta il valore da utilizzare come filler in caso di custom filling
+            :return:
+    '''
     if filler_str == 'no':
         return get_artesian_data_market_assesment_with_no_fill(arr_id_curva,
-                                                               str_data_inizio_estrazione,                                                               str_data_fine_estrazione,
+                                                               str_data_inizio_estrazione,
+                                                               str_data_fine_estrazione,
                                                                arr_products)
     if filler_str == 'last':
         return get_artesian_data_market_assesment_fill_latest_value(arr_id_curva,
