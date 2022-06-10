@@ -263,6 +263,15 @@ def get_artesian_data_market_assesment_fill_latest_value(arr_id_curva,
                                                          str_data_inizio_estrazione,
                                                          str_data_fine_estrazione,
                                                          arr_products):
+    '''
+        Rende un dataframe rappresentatne le Market Assessment Time Series richieste fillando con l'ultimo
+        valore disponible
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param arr_products: Array di stringhe rappresentanti i nomi dei prodotti richiesti. Es: ['Q122']
+            :return:
+    '''
     cfg = get_configuration()
 
     qs = QueryService(cfg)
@@ -302,6 +311,15 @@ def get_artesian_data_market_assesment_fill_custom_value(arr_id_curva,
                                                          volume_paid=0,
                                                          volume_given=0,
                                                          volume=0):
+    '''
+        Rende un dataframe rappresentatne le Market Assessment Time Series richieste fillando con un valore custom
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param arr_products: Array di stringhe rappresentanti i nomi dei prodotti richiesti. Es: ['Q122']
+            :return:
+    '''
+
     cfg = get_configuration()
 
     qs = QueryService(cfg)
@@ -340,6 +358,14 @@ def get_artesian_data_market_assesment_with_no_fill(arr_id_curva,
                                                     str_data_inizio_estrazione,
                                                     str_data_fine_estrazione,
                                                     arr_products):
+    '''
+        Rende un dataframe rappresentatne le Market Assessment Time Series richieste senza attuare filling
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param arr_products: Array di stringhe rappresentanti i nomi dei prodotti richiesti. Es: ['Q122']
+            :return:
+    '''
     cfg = get_configuration()
 
     qs = QueryService(cfg)
@@ -371,6 +397,14 @@ def get_artesian_data_market_assesment_fill_with_none(arr_id_curva,
                                                       str_data_inizio_estrazione,
                                                       str_data_fine_estrazione,
                                                       arr_products):
+    '''
+        Rende un dataframe rappresentatne le Market Assessment Time Series fillato con 'None' nei valori vuoti
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param arr_products: Array di stringhe rappresentanti i nomi dei prodotti richiesti. Es: ['Q122']
+            :return:
+    '''
     cfg = get_configuration()
 
     qs = QueryService(cfg)
