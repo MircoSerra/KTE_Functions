@@ -4,6 +4,7 @@ from Artesian import Granularity, ArtesianConfig
 from Artesian import MarketData
 from Artesian.MarketData import MarketDataService
 from Artesian.Query import QueryService
+import Artesian as art
 from dateutil import tz
 import pytz
 import KTE_time as tempo
@@ -89,3 +90,45 @@ def get_granularity(string_granularity):
         return Granularity.Week
     if string_granularity == 'y':
         return Granularity.Year
+
+
+def get_extraction_window(query, str_type, **extract_data):
+    if str_type == 'Abs':
+        return query.inAbsoluteDateRange(extract_data['str_data_inizio_estrazione'],
+                                         extract_data['str_data_fine_estrazione'])
+    if str_type == 'Relative':
+        return query.inRelativeInterval(extract_data['relative_period'])
+    if str_type == 'Period':
+        return query.inRelativePeriod(extract_data['period'])
+    if str_type == 'Period range':
+        return query.inRelativePeriodRange(extract_data['period_start'], extract_data['period_end'])
+
+
+def get_relative_interval(str_interval):
+    if str_interval == 'Month to date':
+        return art.Query.RelativeInterval.MonthToDate
+    if str_interval == 'Quarter to date':
+        return art.Query.RelativeInterval.QuarterToDate
+    if str_interval == 'Rolling month':
+        return art.Query.RelativeInterval.RollingMonth
+    if str_interval == 'Rolling quarter':
+        return art.Query.RelativeInterval.RollingQuarter
+    if str_interval == 'Rolling week':
+        return art.Query.RelativeInterval.RollingWeek
+    if str_interval == 'Rolling year':
+        return art.Query.RelativeInterval.RollingYear
+    if str_interval == 'Week to date':
+        return art.Query.RelativeInterval.WeekToDate
+    if str_interval == 'Year to date':
+        return art.Query.RelativeInterval.YearToDate
+
+
+def get_filler_strategy(query, fill_strat, **fill_values):
+    if fill_strat == 'null':
+        return query.withFillNull()
+    elif fill_strat == 'none':
+        return query.withFillNone()
+    elif fill_strat == 'customValue':
+        return query.withFillCustomValue(fill_values['custom'])
+    elif fill_strat == 'latestValue':
+        return query.withFillLatestValue(fill_values['max_older'], fill_values['end_value'])

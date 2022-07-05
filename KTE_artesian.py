@@ -1,5 +1,6 @@
 from datetime import datetime
 import numpy as np
+import Artesian as art
 from Artesian import Granularity, ArtesianConfig
 from Artesian import MarketData
 from Artesian.MarketData import MarketDataService
@@ -11,6 +12,7 @@ import settings_and_imports as setting
 import pandas as pd
 import requests
 import json
+
 
 # Classe atta a contenere i valori per il filling delle curve bid ask
 class FillerValueBidAsk:
@@ -126,6 +128,48 @@ def get_granularity(string_granularity):
         return Granularity.Year
 
 
+def get_extraction_window(query, str_type, **extract_data):
+    if str_type == 'Abs':
+        return query.inAbsoluteDateRange(extract_data['str_data_inizio_estrazione'],
+                                         extract_data['str_data_fine_estrazione'])
+    if str_type == 'Relative':
+        return query.inRelativeInterval(extract_data['relative_period'])
+    if str_type == 'Period':
+        return query.inRelativePeriod(extract_data['period'])
+    if str_type == 'Period range':
+        return query.inRelativePeriodRange(extract_data['period_start'], extract_data['period_end'])
+
+
+def get_relative_interval(str_interval):
+    if str_interval == 'Month to date':
+        return art.Query.RelativeInterval.MonthToDate
+    if str_interval == 'Quarter to date':
+        return art.Query.RelativeInterval.QuarterToDate
+    if str_interval == 'Rolling month':
+        return art.Query.RelativeInterval.RollingMonth
+    if str_interval == 'Rolling quarter':
+        return art.Query.RelativeInterval.RollingQuarter
+    if str_interval == 'Rolling week':
+        return art.Query.RelativeInterval.RollingWeek
+    if str_interval == 'Rolling year':
+        return art.Query.RelativeInterval.RollingYear
+    if str_interval == 'Week to date':
+        return art.Query.RelativeInterval.WeekToDate
+    if str_interval == 'Year to date':
+        return art.Query.RelativeInterval.YearToDate
+
+
+def get_filler_strategy(query, fill_strat, **fill_values):
+    if fill_strat == 'null':
+        return query.withFillNull()
+    elif fill_strat == 'none':
+        return query.withFillNone()
+    elif fill_strat == 'customValue':
+        return query.withFillCustomValue(fill_values['custom'])
+    elif fill_strat == 'latestValue':
+        return query.withFillLatestValue(fill_values['max_older'], fill_values['end_value'])
+    
+
 #######################################################################
 #######################################################################
 # '''''''''''''''''''  Versioned Time Series   ''''''''''''''''''''''''
@@ -133,20 +177,119 @@ def get_granularity(string_granularity):
 #######################################################################
 
 
+def get_version(query, time_version, version_info1='P0Y1M0D', version_info2='P0Y1M0D'):
+    if time_version == 'muv':
+        return query.forMUV()
+    elif time_version == 'lastNVersion':
+        return query.forLastNVersions(version_info1)
+    elif time_version == 'version':
+        return query.forVersion(version_info1)
+    elif time_version == 'lastOfDays':
+        if version_info2:
+            return query.forLastOfDays(version_info1, version_info2)
+        else:
+            return query.forLastOfDays(version_info1)
+    elif time_version == 'lastOfMonths':
+        if version_info2:
+            return query.forLastOfMonths(version_info1, version_info2)
+        else:
+            return query.forLastOfMonths(version_info1)
+    elif time_version == 'mostRecent':
+        if version_info2:
+            return query.forMostRecent(version_info1, version_info2)
+        else:
+            return query.forMostRecent(version_info1)
+
+
+def get_correct_args_versioned(arguments):
+    try:
+        version = arguments['version']
+    except:
+        version = 'muv'
+    try:
+        ganularity = arguments['ganularity']
+    except:
+        ganularity = 'h'
+    try:
+        time_zone = arguments['time_zone']
+    except:
+        time_zone = 'CET'
+    try:
+        str_extaction_window = arguments['str_extaction_window']
+    except:
+        str_extaction_window = 'Abs'
+    try:
+        relative_period = arguments['relative_period']
+    except:
+        relative_period = 'Rolling week'
+    try:
+        period = arguments['period']
+    except:
+        period = 'P5D'
+    try:
+        period_start = arguments['period_start']
+    except:
+        period_start = 'P-3D'
+    try:
+        period_end = arguments['period_end']
+    except:
+        period_end = 'P10D'
+    try:
+        filler_strat = arguments['filler_strat']
+    except:
+        filler_strat = 'null'
+    try:
+        custom = arguments['custom']
+    except:
+        custom = 0
+    try:
+        max_older = arguments['max_older']
+    except:
+        max_older = 0
+    try:
+        end_value = arguments['end_value']
+    except:
+        end_value = 0
+    try:
+        time_trans = arguments['time_trans']
+    except:
+        time_trans = False
+    try:
+        version_info1 = arguments['version_info1']
+    except:
+        version_info1 = 'P0Y1M0D'
+    try:
+        version_info2 = arguments['version_info2']
+    except:
+        version_info2 = 'P0Y1M0D'
+    return version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+           filler_strat, custom, max_older, end_value, time_trans, version_info1, version_info2
+
 ###################################################
 # ''''''''''''''''''   GET  '''''''''''''''''''''''
 ###################################################
 
 
-def get_artesian_data_versioned(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione,
-                                ganularity='h', time_zone='CET'):
+def get_artesian_data_versioned(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione, **arguments):
+
+    version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+    filler_strat, custom, max_older, end_value, time_trans, \
+    version_info1, version_info2 = get_correct_args_versioned(arguments)
+
     cfg = get_configuration()
     qs = QueryService(cfg)
-    return qs.createVersioned() \
+    qs.createVersioned() \
         .forMarketData(arr_id_curva) \
-        .inAbsoluteDateRange(str_data_inizio_estrazione, str_data_fine_estrazione) \
         .inTimeZone(time_zone) \
         .inGranularity(get_granularity(ganularity))
+    qs = get_extraction_window(qs, str_extaction_window, str_data_inizio_estrazione=str_data_inizio_estrazione,
+                               str_data_fine_estrazione=str_data_fine_estrazione, relative_period=relative_period,
+                               period=period, period_start=period_start, period_end=period_end)
+    qs = get_filler_strategy(qs, filler_strat, custom=custom, max_older=max_older, end_value=end_value)
+    if time_trans:
+        qs = qs.withTimeTransform(time_trans)
+    qs = get_version(qs, version, version_info1, version_info2)
+    return qs.execute()
 
 
 ###################################################

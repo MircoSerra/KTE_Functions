@@ -1,6 +1,95 @@
 from KTE_artesian_general import *
 
 
+def get_version(query, time_version, version_info1='P0Y1M0D', version_info2='P0Y1M0D'):
+    if time_version == 'muv':
+        return query.forMUV()
+    elif time_version == 'lastNVersion':
+        return query.forLastNVersions(version_info1)
+    elif time_version == 'version':
+        return query.forVersion(version_info1)
+    elif time_version == 'lastOfDays':
+        if version_info2:
+            return query.forLastOfDays(version_info1, version_info2)
+        else:
+            return query.forLastOfDays(version_info1)
+    elif time_version == 'lastOfMonths':
+        if version_info2:
+            return query.forLastOfMonths(version_info1, version_info2)
+        else:
+            return query.forLastOfMonths(version_info1)
+    elif time_version == 'mostRecent':
+        if version_info2:
+            return query.forMostRecent(version_info1, version_info2)
+        else:
+            return query.forMostRecent(version_info1)
+
+
+def get_correct_args_versioned(arguments):
+    try:
+        version = arguments['version']
+    except:
+        version = 'muv'
+    try:
+        ganularity = arguments['ganularity']
+    except:
+        ganularity = 'h'
+    try:
+        time_zone = arguments['time_zone']
+    except:
+        time_zone = 'CET'
+    try:
+        str_extaction_window = arguments['str_extaction_window']
+    except:
+        str_extaction_window = 'Abs'
+    try:
+        relative_period = arguments['relative_period']
+    except:
+        relative_period = 'Rolling week'
+    try:
+        period = arguments['period']
+    except:
+        period = 'P5D'
+    try:
+        period_start = arguments['period_start']
+    except:
+        period_start = 'P-3D'
+    try:
+        period_end = arguments['period_end']
+    except:
+        period_end = 'P10D'
+    try:
+        filler_strat = arguments['filler_strat']
+    except:
+        filler_strat = 'null'
+    try:
+        custom = arguments['custom']
+    except:
+        custom = 0
+    try:
+        max_older = arguments['max_older']
+    except:
+        max_older = 0
+    try:
+        end_value = arguments['end_value']
+    except:
+        end_value = 0
+    try:
+        time_trans = arguments['time_trans']
+    except:
+        time_trans = False
+    try:
+        version_info1 = arguments['version_info1']
+    except:
+        version_info1 = 'P0Y1M0D'
+    try:
+        version_info2 = arguments['version_info2']
+    except:
+        version_info2 = 'P0Y1M0D'
+    return version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+           filler_strat, custom, max_older, end_value, time_trans, version_info1, version_info2
+
+
 ###################################################
 #'''''''''''''''''   Formatter  ''''''''''''''''''#
 ###################################################
@@ -173,7 +262,7 @@ def post_artesian_versioned_time_series_hourly(data, dict_of_tags, provider, cur
 # ''''''''''''''''''   GET  '''''''''''''''''''''''
 ###################################################
 
-def get_artesian_data_versioned(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione,
+def get_artesian_versioned(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione,
                                 ganularity='h', time_zone='CET'):
     '''
         Rende la query alle curve, per avere i dati bisognerà chiedere la versione al dato restituito
@@ -202,7 +291,7 @@ def get_artesian_data_versioned(arr_id_curva, str_data_inizio_estrazione, str_da
                             if string_granularity == 'y':
                                 return Granularity.Year
             :param time_zone: Stringa contenente il nome della timezone originale della curve, es 'CET'
-            :return: QueryService, Oggetto contenuto nell'sdk artesian
+            :return: QueryService, Oggetto contenuto nell'sdk Artesian
     '''
     cfg = get_configuration()
     qs = QueryService(cfg)
@@ -211,6 +300,56 @@ def get_artesian_data_versioned(arr_id_curva, str_data_inizio_estrazione, str_da
         .inAbsoluteDateRange(str_data_inizio_estrazione, str_data_fine_estrazione) \
         .inTimeZone(time_zone) \
         .inGranularity(get_granularity(ganularity))
+
+
+def get_artesian_versioned_data(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione, **arguments):
+    '''
+        Rende la query alle curve, per avere i dati bisognerà chiedere la versione al dato restituito
+            :param arr_id_curva: Array d'interi rappresentanti le curve richieste
+            :param str_data_inizio_estrazione: Stringa rappresentante la data d'inizio estrazione nel formato YYYY-MM-DD
+            :param str_data_fine_estrazione: Stringa rappresentante la data di fine estrazione nel formato YYYY-MM-DD
+            :param string_granularity: Char che indica la granularità secondo lo schema
+                            if string_granularity == 'd':
+                                return Granularity.Day
+                            if string_granularity == 'm':
+                                return Granularity.Minute
+                            if string_granularity == 'M':
+                                return Granularity.Month
+                            if string_granularity == 'f':
+                                return Granularity.FifteenMinute
+                            if string_granularity == 'h':
+                                return Granularity.Hour
+                            if string_granularity == 'q':
+                                return Granularity.Quarter
+                            if string_granularity == 't':
+                                return Granularity.TenMinute
+                            if string_granularity == 'T':
+                                return Granularity.ThirtyMinute
+                            if string_granularity == 'w':
+                                return Granularity.Week
+                            if string_granularity == 'y':
+                                return Granularity.Year
+            :param time_zone: Stringa contenente il nome della timezone originale della curve, es 'CET'
+            :return: DataFrame conenente le curve Artesian desiderate
+    '''
+    version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+    filler_strat, custom, max_older, end_value, time_trans, \
+    version_info1, version_info2 = get_correct_args_versioned(arguments)
+
+    cfg = get_configuration()
+    qs = QueryService(cfg)
+    qs.createVersioned() \
+        .forMarketData(arr_id_curva) \
+        .inTimeZone(time_zone) \
+        .inGranularity(get_granularity(ganularity))
+    qs = get_extraction_window(qs, str_extaction_window, str_data_inizio_estrazione=str_data_inizio_estrazione,
+                               str_data_fine_estrazione=str_data_fine_estrazione, relative_period=relative_period,
+                               period=period, period_start=period_start, period_end=period_end)
+    qs = get_filler_strategy(qs, filler_strat, custom=custom, max_older=max_older, end_value=end_value)
+    if time_trans:
+        qs = qs.withTimeTransform(time_trans)
+    qs = get_version(qs, version, version_info1, version_info2)
+    return qs.execute()
 
 ###################################################
 # ''''''''''''''''''   UPDATE  ''''''''''''''''''''
