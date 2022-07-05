@@ -1,8 +1,61 @@
 from KTE_artesian_general import *
 
+
 ###################################################
 # '''''''''''''''''  Formatter  ''''''''''''''''
 ###################################################
+def get_correct_args(arguments):
+    try:
+        ganularity = arguments['ganularity']
+    except:
+        ganularity = 'h'
+    try:
+        time_zone = arguments['time_zone']
+    except:
+        time_zone = 'CET'
+    try:
+        str_extaction_window = arguments['str_extaction_window']
+    except:
+        str_extaction_window = 'Abs'
+    try:
+        relative_period = arguments['relative_period']
+    except:
+        relative_period = 'Rolling week'
+    try:
+        period = arguments['period']
+    except:
+        period = 'P5D'
+    try:
+        period_start = arguments['period_start']
+    except:
+        period_start = 'P-3D'
+    try:
+        period_end = arguments['period_end']
+    except:
+        period_end = 'P10D'
+    try:
+        filler_strat = arguments['filler_strat']
+    except:
+        filler_strat = 'null'
+    try:
+        custom = arguments['custom']
+    except:
+        custom = 0
+    try:
+        max_older = arguments['max_older']
+    except:
+        max_older = 0
+    try:
+        end_value = arguments['end_value']
+    except:
+        end_value = 0
+    try:
+        time_trans = arguments['time_trans']
+    except:
+        time_trans = False
+    return ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+           filler_strat, custom, max_older, end_value, time_trans
+
 
 def make_artesian_dict_actual(df, colonna):
     '''
@@ -205,6 +258,27 @@ def get_artesian_data_actual(arr_id_curva,
     df_curva = pd.DataFrame(data)
     return df_curva
 
+
+def get_artesian_actual_data(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione, **arguments):
+    ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+    filler_strat, custom, max_older, end_value, time_trans = get_correct_args(arguments)
+    cfg = get_configuration()
+
+    qs = QueryService(cfg)
+    qs.createVersioned() \
+        .forMarketData(arr_id_curva) \
+        .inTimeZone(time_zone) \
+        .inGranularity(get_granularity(ganularity))
+    qs = get_extraction_window(qs, str_extaction_window, str_data_inizio_estrazione=str_data_inizio_estrazione,
+                               str_data_fine_estrazione=str_data_fine_estrazione, relative_period=relative_period,
+                               period=period, period_start=period_start, period_end=period_end)
+    qs = get_filler_strategy(qs, filler_strat, custom=custom, max_older=max_older, end_value=end_value)
+    if time_trans:
+        qs = qs.withTimeTransform(time_trans)
+
+    data = qs.execute()
+    df_curva = pd.DataFrame(data)
+    return df_curva
 
 def get_artesian_data_actual_daily(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione):
     '''

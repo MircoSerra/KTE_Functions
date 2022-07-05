@@ -409,21 +409,26 @@ def post_artesian_versioned_time_series_hourly(data, dict_of_tags, provider, cur
 # ''''''''''''''''''   GET  '''''''''''''''''''''''
 ###################################################
 
-def get_artesian_data_actual(arr_id_curva,
-                      str_data_inizio_estrazione,
-                      str_data_fine_estrazione,
-                      ganularity='h', time_zone='CET'):
+def get_artesian_data_actual(arr_id_curva, str_data_inizio_estrazione, str_data_fine_estrazione, **arguments):
+
+    version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
+    filler_strat, custom, max_older, end_value, time_trans, \
+    version_info1, version_info2 = get_correct_args_versioned(arguments)
     cfg = get_configuration()
-    gran = get_granularity(ganularity)
 
     qs = QueryService(cfg)
-    data = qs.createActual() \
+    qs.createVersioned() \
         .forMarketData(arr_id_curva) \
-        .inAbsoluteDateRange(str_data_inizio_estrazione, str_data_fine_estrazione) \
         .inTimeZone(time_zone) \
-        .inGranularity(gran) \
-        .execute()
+        .inGranularity(get_granularity(ganularity))
+    qs = get_extraction_window(qs, str_extaction_window, str_data_inizio_estrazione=str_data_inizio_estrazione,
+                               str_data_fine_estrazione=str_data_fine_estrazione, relative_period=relative_period,
+                               period=period, period_start=period_start, period_end=period_end)
+    qs = get_filler_strategy(qs, filler_strat, custom=custom, max_older=max_older, end_value=end_value)
+    if time_trans:
+        qs = qs.withTimeTransform(time_trans)
 
+    data = qs.execute()
     df_curva = pd.DataFrame(data)
     return df_curva
 
