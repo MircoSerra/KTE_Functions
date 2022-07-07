@@ -4,7 +4,7 @@ import time
 from dateutil.easter import *
 from dateutil.rrule import rrule, HOURLY
 
-import settings_and_imports as setting
+import src.KTE_artesian.settings_and_imports as setting
 
 
 def find_off_peak_hours(df, month, year):

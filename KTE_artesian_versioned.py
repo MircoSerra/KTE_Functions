@@ -1,7 +1,22 @@
-from KTE_artesian_general import *
+from src.KTE_artesian.KTE_artesian_general import *
 
 
-def get_version(query, time_version, version_info1='P0Y1M0D', version_info2='P0Y1M0D'):
+def get_version(query, time_version, version_info1='P0Y1M0D', version_info2=False):
+    '''
+        Rende la versione specificata tramite i parametri della funzione
+        :param query: Oggetto della classe QueryService contenuto nell pacchetto sdk-artesian
+        :param time_version: Stringa contenente il nome della metodologia d'estrazione di versione richiesta
+                muv => Ultima versione inserita
+                lastNVersion => Ultime n versioni
+                version => Versione specifica, bisogna passare la stringa contenente il time stamp
+                lastOfDays => Rende l'ultima versione del giorno specificato come stringa
+                lastOfMonth => Rende l'ultima versione del mese specificato come Stringa
+                mostRecent => Rende la versione più recente contenuta nell'intervallo temporale rappresentato
+                              dalle due stringhe passate come input
+        :param version_info1: Stringa contenente una data o un intero rappresentante il numero di versioni richieste
+        :param version_info2: Stringa contenente una data rappresentante il secondo estremo di un intervallo temporale
+        :return: dataset contenente la curva nella versione richiesta
+    '''
     if time_version == 'muv':
         return query.forMUV()
     elif time_version == 'lastNVersion':
@@ -26,6 +41,11 @@ def get_version(query, time_version, version_info1='P0Y1M0D', version_info2='P0Y
 
 
 def get_correct_args_versioned(arguments):
+    '''
+        Funzione per la corretta interpretazione dei parametri
+        :param arguments: Dizionario contenente le variabili richieste
+        :return: Tuple conenente i parametri della funzione correttamente formattati
+    '''
     try:
         version = arguments['version']
     except:
@@ -73,7 +93,7 @@ def get_correct_args_versioned(arguments):
     try:
         end_value = arguments['end_value']
     except:
-        end_value = 0
+        end_value = False
     try:
         time_trans = arguments['time_trans']
     except:
@@ -85,7 +105,7 @@ def get_correct_args_versioned(arguments):
     try:
         version_info2 = arguments['version_info2']
     except:
-        version_info2 = 'P0Y1M0D'
+        version_info2 = False
     return version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
            filler_strat, custom, max_older, end_value, time_trans, version_info1, version_info2
 
@@ -329,7 +349,8 @@ def get_artesian_versioned_data(arr_id_curva, str_data_inizio_estrazione, str_da
                                 return Granularity.Week
                             if string_granularity == 'y':
                                 return Granularity.Year
-            :param time_zone: Stringa contenente il nome della timezone originale della curve, es 'CET'
+            :param time_zone: Stringa contenente il nome della timezone originale della curve, default 'CET'
+
             :return: DataFrame conenente le curve Artesian desiderate
     '''
     version, ganularity, time_zone, str_extaction_window, relative_period, period, period_start, period_end, \
@@ -338,13 +359,12 @@ def get_artesian_versioned_data(arr_id_curva, str_data_inizio_estrazione, str_da
 
     cfg = get_configuration()
     qs = QueryService(cfg)
-    qs.createVersioned() \
-        .forMarketData(arr_id_curva) \
-        .inTimeZone(time_zone) \
-        .inGranularity(get_granularity(ganularity))
+    qs = qs.createVersioned() \
+        .forMarketData(arr_id_curva)
     qs = get_extraction_window(qs, str_extaction_window, str_data_inizio_estrazione=str_data_inizio_estrazione,
                                str_data_fine_estrazione=str_data_fine_estrazione, relative_period=relative_period,
-                               period=period, period_start=period_start, period_end=period_end)
+                               period=period, period_start=period_start, period_end=period_end).inTimeZone(time_zone) \
+        .inGranularity(get_granularity(ganularity))
     qs = get_filler_strategy(qs, filler_strat, custom=custom, max_older=max_older, end_value=end_value)
     if time_trans:
         qs = qs.withTimeTransform(time_trans)

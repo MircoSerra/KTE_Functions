@@ -7,8 +7,8 @@ from Artesian.Query import QueryService
 import Artesian as art
 from dateutil import tz
 import pytz
-import KTE_time as tempo
-import settings_and_imports as setting
+import src.KTE_artesian.KTE_time as tempo
+import src.KTE_artesian.settings_and_imports as setting
 import pandas as pd
 
 
@@ -131,4 +131,7 @@ def get_filler_strategy(query, fill_strat, **fill_values):
     elif fill_strat == 'customValue':
         return query.withFillCustomValue(fill_values['custom'])
     elif fill_strat == 'latestValue':
-        return query.withFillLatestValue(fill_values['max_older'], fill_values['end_value'])
+        if fill_values['end_value']:
+            return query.withFillLatestValue(fill_values['max_older'], fill_values['end_value'])
+        else:
+            return query.withFillLatestValue(fill_values['max_older'])

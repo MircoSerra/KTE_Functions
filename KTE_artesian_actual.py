@@ -1,4 +1,4 @@
-from KTE_artesian_general import *
+from src.KTE_artesian.KTE_artesian_general import *
 
 
 ###################################################
@@ -265,7 +265,7 @@ def get_artesian_actual_data(arr_id_curva, str_data_inizio_estrazione, str_data_
     cfg = get_configuration()
 
     qs = QueryService(cfg)
-    qs.createVersioned() \
+    qs = qs.createActual() \
         .forMarketData(arr_id_curva) \
         .inTimeZone(time_zone) \
         .inGranularity(get_granularity(ganularity))

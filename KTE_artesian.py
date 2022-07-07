@@ -7,8 +7,8 @@ from Artesian.MarketData import MarketDataService
 from Artesian.Query import QueryService
 from dateutil import tz
 import pytz
-import KTE_time as tempo
-import settings_and_imports as setting
+import src.KTE_artesian.KTE_time as tempo
+import src.KTE_artesian.settings_and_imports as setting
 import pandas as pd
 import requests
 import json
